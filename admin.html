@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Panel de Productos - Aserrío Donde Chinky</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
+    h1 { color: #2c3e50; }
+    input, button { margin: 5px; padding: 8px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 8px; border: 1px solid #ccc; text-align: left; }
+    th { background: #2c3e50; color: white; }
+  </style>
+</head>
+<body>
+  <h1>Administrar Productos</h1>
+
+  <form id="productoForm">
+    <input type="text" id="nombre" placeholder="Nombre del producto" required />
+    <input type="number" id="precio" placeholder="Precio" required />
+    <input type="number" id="cantidad" placeholder="Cantidad" required />
+    <button type="submit">Guardar</button>
+  </form>
+
+  <!-- Aquí va la tabla dentro del div solicitado -->
+  <div id="lista-productos">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Precio</th>
+          <th>Cantidad</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-productos"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const tabla = document.getElementById('tabla-productos');
+    const formulario = document.getElementById('productoForm');
+    const nombre = document.getElementById('nombre');
+    const precio = document.getElementById('precio');
+    const cantidad = document.getElementById('cantidad');
+
+    function cargarProductos() {
+      fetch('/api/productos')
+        .then(res => res.json())
+        .then(data => {
+          tabla.innerHTML = '';
+          data.forEach(p => {
+            const fila = document.createElement('tr');
+            fila.innerHTML = `
+              <td>${p.id}</td>
+              <td><input value="${p.nombre}" onchange="editar(${p.id}, this.value, 'nombre')"></td>
+              <td><input type="number" value="${p.precio}" onchange="editar(${p.id}, this.value, 'precio')"></td>
+              <td><input type="number" value="${p.cantidad}" onchange="editar(${p.id}, this.value, 'cantidad')"></td>
+              <td><button onclick="eliminar(${p.id})">Eliminar</button></td>
+            `;
+            tabla.appendChild(fila);
+          });
+        });
+    }
+
+    function editar(id, valor, campo) {
+      fetch('/admin/productos/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [campo]: valor })
+      }).then(() => cargarProductos());
+    }
+
+    function eliminar(id) {
+      if (confirm('¿Eliminar producto?')) {
+        fetch('/admin/productos/' + id, { method: 'DELETE' })
+          .then(() => cargarProductos());
+      }
+    }
+
+    formulario.onsubmit = e => {
+      e.preventDefault();
+      fetch('/admin/productos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre: nombre.value, precio: precio.value, cantidad: cantidaad.value })
+      }).then(() => {
+        formulario.reset();
+        cargarProductos();
+      });
+    }
+    
+    cargarProductos();
+  </script>
+</body>
+</html>

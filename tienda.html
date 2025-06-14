@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Tienda - DONDE CHINKY</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <a href="index.html">ASERRÍO DONDE CHINKY</a>
+        </div>
+        <nav class="nav-menu">
+          <ul class="nav-list">
+            <li class="nav-item"><a href="inicio.html" class="nav-link">Inicio</a></li>
+            <li class="nav-item"><a href="nosotros.html" class="nav-link">Acerca de nosotros</a></li>
+            <li class="nav-item"><a href="productos/productos.html" class="nav-link">Productos</a></li>
+            <li class="nav-item"><a href="contacto.html" class="nav-link">Contáctanos</a></li>
+            <li class="nav-item"><a href="tienda.html" class="nav-link active">Tienda</a></li>
+          </ul>
+        </nav>
+        <div class="menu-toggle">
+          <i class="fas fa-bars"></i>
+        </div>
+      </div>
+    </div>
+  </header>
+   <section id="lista-productos"></section>
+
+  <!-- Formulario de compra -->
+  <h2>Finalizar compra</h2>
+  <form id="form-compra">
+    <label for="nombre">Nombre:</label>
+    <input type="text" id="nombre" required />
+
+    <label for="correo">Correo electrónico:</label>
+    <input type="email" id="correo" required />
+
+    <label for="telefono">Teléfono:</label>
+    <input type="tel" id="telefono" required />
+
+    <button type="submit">Confirmar Compra</button>
+  </form>
+
+  <!-- Sección de productos -->
+  <div class="productos-container">
+    <h2>Productos Disponibles</h2>
+    <div id="lista-productos"></div>
+  </div>
+
+  <!-- Sección de carrito -->
+  <div class="carritoTienda">
+    <h2>Carrito de Compras</h2>
+    <div id="carrito"></div>
+    <h3>Total: $<span id="total">0</span></h3>
+
+    <div class="btn-wompi">
+      <form action="https://checkout.wompi.co/p/" method="GET" target="_blank">
+        <input type="hidden" name="public-key" value="pub_test_tuClavePublicaDePruebas">
+        <input type="hidden" name="currency" value="COP">
+        <input type="hidden" name="amount-in-cents" id="montoPago" value="500000">
+        <input type="hidden" name="reference" value="compra-001">
+        <input type="hidden" name="redirect-url" value="https://tusitio.com/gracias.html">
+        <button type="submit" class="btn-comprar">Pagar con Wompi</button>
+      </form>
+    </div>
+
+    <h3>Datos del comprador</h3>
+    <form id="formCompra">
+      <input type="text" id="nombre" name="nombre" placeholder="Nombre completo" required>
+      <input type="email" id="correo" name="correo" placeholder="Correo electrónico" required>
+      <input type="text" id="telefono" name="telefono" placeholder="WhatsApp o Teléfono" required>
+      <button type="submit">Registrar y Enviar Factura</button>
+    </form>
+
+    <h4>Opciones de Pago</h4>
+    <select>
+      <option>Transferencia Bancaria</option>
+      <option>Nequi</option>
+      <option>Daviplata</option>
+      <option>Bancolombia</option>
+      <option>Banco BBVA</option>
+      <option>Banco de Bogotá</option>
+      <option>Banco de Occidente</option>
+      <option>Banco Agrario</option>
+      <option>Banco Popular</option>
+      <option>Banco AV Villas</option>
+      <option>Banco Caja Social</option>
+      <option>Banco Colpatria</option>
+      <option>Banco Citibank</option>
+      <option>Banco GNB Sudameris</option>
+      <option>Banco Itaú</option>
+      <option>Banco Pichincha</option>
+      <option>Bancoomeva</option>
+    </select>
+  </div>
+
+  <!-- Scripts -->
+  <script src="script.js"></script>
+  <script>
+    // Actualiza el monto a pagar en centavos antes de enviar a Wompi
+    function actualizarMontoPago() {
+      const total = document.getElementById('total').textContent;
+      const montoCentavos = parseInt(parseFloat(total) * 100);
+      document.getElementById('montoPago').value = montoCentavos;
+    }
+
+    const formWompi = document.querySelector('.btn-wompi form');
+    formWompi.addEventListener('submit', actualizarMontoPago);
+
+    // Carga productos desde backend
+    fetch('http://localhost:3002/api/productos')
+      .then(res => res.json())
+      .then(productos => {
+        const contenedor = document.getElementById('lista-productos');
+        productos.forEach(p => {
+          contenedor.innerHTML += `
+            <div class="producto">
+              <h3>${p.nombre}</h3>
+              <p>Precio: $${p.precio}</p>
+              <p>Disponible: ${p.cantidad}</p>
+              <button onclick="agregarAlCarrito('${p.nombre}', ${p.precio})">Comprar</button>
+            </div>
+          `;
+        });
+      });
+
+    // Agrega productos al carrito
+    function agregarAlCarrito(nombre, precio) {
+      const carrito = document.getElementById('carrito');
+      const totalSpan = document.getElementById('total');
+
+      carrito.innerHTML += `<p>${nombre} - $${precio}</p>`;
+
+      let total = parseFloat(totalSpan.textContent);
+      total += precio;
+      totalSpan.textContent = total.toFixed(2);
+    }
+
+document.getElementById('form-compra').addEventListener('submit', async function (e) {
+  e.preventDefault();
+
+  const nombre = document.getElementById('nombre').value;
+  const correo = document.getElementById('correo').value;
+  const telefono = document.getElementById('telefono').value;
+
+  // Recolectar los productos seleccionados desde el carrito (ajusta según tu estructura)
+  const productos = JSON.parse(localStorage.getItem('carrito')) || [];
+  const total = productos.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
+
+  const productosTexto = productos.map(p => `${p.nombre} x ${p.cantidad}`).join(', ');
+
+  const datos = {
+    nombre,
+    correo,
+    telefono,
+    productos: productosTexto,
+    total
+  };
+
+  const respuesta = await fetch('/api/comprar', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(datos)
+  });
+
+  const resultado = await respuesta.json();
+  alert(resultado.mensaje);
+});
+
+  </script>
+</body>
+</html>
