@@ -7,7 +7,7 @@ const basicAuth = require('express-basic-auth');
 const dotenv = require('dotenv').config();
 
 const app = express();
-const port = 3002;
+const port = process.env.PORT || 3002;
 
 // Middleware
 app.use(cors());
@@ -15,7 +15,7 @@ app.use(express.json());
 
 // Autenticación básica para /admin
 app.use('/admin', basicAuth({
-  users: { 'admin': 'contraseña123' },
+  users: { 'admin': 'juan1038' },
   challenge: true
 }));
 
@@ -56,17 +56,10 @@ app.post('/api/comprar', (req, res) => {
     db.query('INSERT INTO facturas (cliente_id, productos, total) VALUES (?, ?, ?)', [clienteId, productos, total], (err2) => {
       if (err2) return res.status(500).send(err2);
 
-      // Configuración del correo (debes configurar correctamente tu cuenta)
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: 'juanguillermopaneso75@gmail.com',
-          pass: 'tupassword'
-        }
-      });
+  
 
       const mailOptions = {
-        from: 'tuemail@gmail.com',
+        from: '',
         to: correo,
         subject: 'Factura de Compra - Aserrío Donde Chinky',
         text: `Gracias por tu compra, ${nombre}.\n\nProductos: ${productos}\nTotal: $${total}`
@@ -122,7 +115,6 @@ app.delete('/admin/productos/:id', (req, res) => {
 app.listen(port, () => {
   console.log(`Servidor corriendo en http://localhost:${port}`);
 });
-require('dotenv').config();
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
